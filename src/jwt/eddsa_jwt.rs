@@ -1,5 +1,5 @@
 use jwt_simple::prelude::{Ed25519KeyPair, EdDSAKeyPairLike, Ed25519PublicKey, Claims, Duration, EdDSAPublicKeyLike};
-use tracing::{event, Level};
+use tracing::error;
 
 pub struct EdDSAJwt {
     encoding_key: Ed25519KeyPair,
@@ -44,7 +44,7 @@ impl EdDSAJwt {
                 Ok(d.custom)
             },
             Err(e) => {
-                event!(Level::ERROR, "validate error {e}");
+                error!("validate error {e}");
                 match e {
                     _ => Err(Error::ValidateError),
                 }
@@ -74,7 +74,7 @@ mod test {
 
     use std::sync::{OnceLock, Arc};
 
-    use crate::jwt::jwt::Error;
+    use crate::jwt::eddsa_jwt::Error;
 
     use super::EdDSAJwt;    
 

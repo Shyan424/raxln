@@ -1,1 +1,1 @@
-pub mod jwt;
+pub mod eddsa_jwt;
