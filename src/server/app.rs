@@ -2,6 +2,7 @@ use std::sync::{OnceLock, RwLock};
 
 use config::Config;
 use tracing::Level;
+use tracing_subscriber::fmt::time::OffsetTime;
 
 use super::router::router;
 
@@ -15,6 +16,7 @@ impl App {
         App{}
     }
 
+    #[tokio::main]
     pub async fn start(&self) {
         let conf_port = config().read().unwrap().get::<i32>("app.port");
         let port = if let Ok(p) = conf_port {
@@ -25,6 +27,7 @@ impl App {
 
         axum::Server::bind(&format!("0.0.0.0:{port}").parse().unwrap())
             .serve(router().into_make_service())
+            .with_graceful_shutdown(graceful_shutdown())
             .await
             .unwrap();
     }
@@ -32,7 +35,10 @@ impl App {
 
 fn set_tracing() {
     tracing_subscriber::fmt()
+        .with_timer(OffsetTime::local_rfc_3339().expect("no local offset"))
+        .with_line_number(true)
         .with_max_level(Level::INFO)
+        .json()
         .init();
 }
 
@@ -47,6 +53,13 @@ fn config() -> &'static RwLock<Config> {
             .expect("Read config Error")
         )
     )
+}
+
+async fn graceful_shutdown() {
+    tokio::signal::ctrl_c()
+    .await.unwrap();
+
+    println!("88");
 }
 
 #[cfg(test)]
