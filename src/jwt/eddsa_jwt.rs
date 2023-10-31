@@ -1,14 +1,20 @@
+use std::sync::{OnceLock, Arc};
+
 use jwt_simple::prelude::{Ed25519KeyPair, EdDSAKeyPairLike, Ed25519PublicKey, Claims, Duration, EdDSAPublicKeyLike};
 use tracing::error;
+
+use super::error::Error;
 
 pub struct EdDSAJwt {
     encoding_key: Ed25519KeyPair,
     decoding_key: Ed25519PublicKey
 }
 
+
+
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct JwtClaims {
-    i: String
+    pub i: String
 }
 
 impl EdDSAJwt {
@@ -17,6 +23,11 @@ impl EdDSAJwt {
         let ed_pk = ed_pair.public_key();
 
         EdDSAJwt { encoding_key: ed_pair, decoding_key: ed_pk }
+    }
+
+    pub fn default() -> Arc<EdDSAJwt> {
+        static EDDSA: OnceLock<Arc<EdDSAJwt>> = OnceLock::new();
+        Arc::clone(EDDSA.get_or_init(|| Arc::new(EdDSAJwt::new())))
     }
 
     pub fn create(&self, id: &String) -> Result<String, Error> {
@@ -38,6 +49,8 @@ impl EdDSAJwt {
 
     pub fn validate(&self, jwt: &String) -> Result<JwtClaims, Error> {
         let decoded = self.decoding_key.verify_token::<JwtClaims>(&jwt, None);
+
+        // decoded.map_or(Err(Error::ValidateError), |d| Ok(d.custom))
 
         match decoded {
             Ok(d) => {
@@ -63,18 +76,12 @@ impl EdDSAJwt {
 
 }
 
-#[derive(Debug, PartialEq, Eq)]
-pub enum Error {
-    CreateError,
-    ValidateError
-}
-
 #[cfg(test)]
 mod test {
 
     use std::sync::{OnceLock, Arc};
 
-    use crate::jwt::eddsa_jwt::Error;
+    use crate::jwt::error::Error;
 
     use super::EdDSAJwt;    
 
