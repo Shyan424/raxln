@@ -6,26 +6,24 @@ use tracing_subscriber::fmt::time::OffsetTime;
 
 use super::router::router;
 
-pub struct App;
+pub struct App {
+    port: i32
+}
 
 impl App {
     pub fn new () -> Self {
         set_tracing();
         config();
 
-        App{}
+        let conf_port = config().read().unwrap().get::<i32>("server.port");
+        let port = conf_port.map_or(3000, |p| p);
+
+        App{port}
     }
 
     #[tokio::main]
     pub async fn start(&self) {
-        let conf_port = config().read().unwrap().get::<i32>("app.port");
-        let port = if let Ok(p) = conf_port {
-            p
-        } else {
-            3000
-        };
-
-        axum::Server::bind(&format!("0.0.0.0:{port}").parse().unwrap())
+        axum::Server::bind(&format!("0.0.0.0:{}", self.port).parse().unwrap())
             .serve(router().into_make_service())
             .with_graceful_shutdown(graceful_shutdown())
             .await
@@ -38,7 +36,7 @@ fn set_tracing() {
         .with_timer(OffsetTime::local_rfc_3339().expect("no local offset"))
         .with_line_number(true)
         .with_max_level(Level::INFO)
-        .json()
+        // .json()
         .init();
 }
 
@@ -73,7 +71,7 @@ mod test {
             .add_source(config::File::with_name("config.toml"))
             .build().expect("no conf");
 
-        println!("server port {}", p.get_string("app.port").expect("app.port error"));
+        println!("server port {}", p.get_string("server.port").expect("server.port error"));
     }
 
 }

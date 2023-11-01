@@ -5,7 +5,7 @@ use ring::signature::KeyPair;
 use serde::{Serialize, Deserialize};
 use time::{OffsetDateTime, Duration};
 
-use super::error::Error;
+use super::error::AuthError;
 
 
 pub struct EdDsaJwt {
@@ -32,7 +32,7 @@ impl EdDsaJwt {
         Arc::clone(&EDDSA.get_or_init(|| Arc::new(EdDsaJwt::new())))
     }
 
-    pub fn signature(&self, id: &String) -> Result<String, Error> {
+    pub fn signature(&self, id: &String) -> Result<String, AuthError> {
         let iat = OffsetDateTime::now_utc();
         let exp = iat.saturating_add(Duration::minutes(30));
         let claims = Claims::new(id.clone(), iat, exp);
@@ -41,17 +41,17 @@ impl EdDsaJwt {
             .map_err(|e| {
                 match e.kind() {
                     
-                    _ => Error::CreateError
+                    _ => AuthError::CreateError
                 }
             })
     }
 
-    pub fn validate(&self, token: &String) -> Result<Claims, Error> {
+    pub fn validate(&self, token: &String) -> Result<Claims, AuthError> {
         let claims = decode::<Claims>(&token, &self.decoding_key, &self.validation)
             .map_err(|e| {
                 match e.kind() {
 
-                    _ => Error::ValidateError
+                    _ => AuthError::ValidateError
                 }
             })?.claims;
         
@@ -118,7 +118,7 @@ mod test {
     use time::{OffsetDateTime, Duration};
 
     use crate::jwt::eddsa::EdDsaJwt;
-    use crate::jwt::error::Error;
+    use crate::jwt::error::AuthError;
 
     use super::Claims;
 
@@ -165,7 +165,7 @@ mod test {
     
         match validate {
             Ok(_) => assert!(false),
-            Err(e) => assert_eq!(Error::ValidateError, e)
+            Err(e) => assert_eq!(AuthError::ValidateError, e)
         };
     }
 

@@ -4,10 +4,15 @@ use std::time::Duration;
 use axum::Router;
 use axum::http::header;
 use tower::ServiceBuilder;
-use tower_http::ServiceBuilderExt;
+use tower_http::{ServiceBuilderExt, LatencyUnit};
 use tower_http::cors::{CorsLayer, Any};
 use tower_http::timeout::TimeoutLayer;
-use tower_http::trace::TraceLayer;
+use tower_http::trace::{TraceLayer, DefaultOnResponse, DefaultMakeSpan};
+use tracing::Level;
+
+use crate::route::test;
+
+use super::on_request::TraceRequest;
 
 
 // https://github.com/tower-rs/tower-http/blob/master/examples/axum-key-value-store/src/main.rs
@@ -18,6 +23,7 @@ pub fn router() -> Router {
     let middleware = ServiceBuilder::new()
         // Mark the `Authorization` and `Cookie` headers as sensitive so it doesn't show in logs
         .sensitive_request_headers(sensitive_headers.clone())
+        .sensitive_response_headers(sensitive_headers.clone())
         .layer(TimeoutLayer::new(Duration::from_secs(10)))
         .compression()
         .layer(CorsLayer::new().allow_origin(Any))
@@ -29,12 +35,15 @@ pub fn router() -> Router {
                 // .on_body_chunk(|chunk: &Bytes, latency: Duration, _: &tracing::Span| {
                 //     tracing::trace!(size_bytes = chunk.len(), latency = ?latency, "sending body chunk")
                 // })
-                // .make_span_with(DefaultMakeSpan::new().include_headers(true).level(Level::INFO))
-                // .on_response(DefaultOnResponse::new().include_headers(true).latency_unit(LatencyUnit::Micros).level(Level::INFO))
+                .make_span_with(DefaultMakeSpan::new().include_headers(true).level(Level::INFO))
+                .on_request(TraceRequest::new())
+                .on_response(DefaultOnResponse::new().latency_unit(LatencyUnit::Micros).level(Level::INFO))
         );
 
+    let v1_router = Router::new()
+        .nest("/test", test::test_router());
+
     Router::new()
-        // .route("/", get(hello_world))
-        // layer 只會影響上面的，不會影響下面的
+        .nest("/api/v1", v1_router)
         .layer(middleware)
 }

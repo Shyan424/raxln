@@ -1,20 +1,16 @@
-use axum::Json;
-use axum::http::{Request, StatusCode, header};
+use axum::http::{Request, header};
 use axum::middleware::Next;
 use axum::response::Response;
-use serde::Serialize;
+
 use tracing::info;
 
 use crate::jwt::eddsa::EdDsaJwt;
 
 
-#[derive(Debug, Serialize)]
-pub struct ErrorResponse {
-    msg: String
-}
+use super::error::AuthError;
 
 // https://github.com/wpcodevo/rust-axum-jwt-auth/blob/master/src/jwt_auth.rs
-pub async fn jwt_authorization<B>(request: Request<B>, next: Next<B>) -> Result<Response, (StatusCode, Json<ErrorResponse>)> {
+pub async fn jwt_authorization<B>(request: Request<B>, next: Next<B>) -> Result<Response, AuthError> {
     // in ㄉ時候做
     let token = request.headers()
         .get(header::AUTHORIZATION)
@@ -28,21 +24,11 @@ pub async fn jwt_authorization<B>(request: Request<B>, next: Next<B>) -> Result<
         });
 
     let token = token.ok_or_else(|| {
-        let error_msg = ErrorResponse {
-            msg: String::from("Without token")
-        };
-
-        (StatusCode::UNAUTHORIZED, Json(error_msg))
+        AuthError::WithoutToken
     })?;
 
     let claims = EdDsaJwt::default().validate(&token)
-        .map_err(|_| {
-            let err = ErrorResponse {
-                msg: String::from("validate fail")
-            };
-
-            (StatusCode::UNAUTHORIZED, Json(err))
-        })?;
+        .map_err(|e| e)?;
 
     info!("hi {}", claims.id);
 

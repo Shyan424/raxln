@@ -1,6 +1,7 @@
 
 #[derive(Debug, PartialEq, Eq)]
-pub enum Error {
+pub enum AuthError {
     CreateError,
-    ValidateError
+    ValidateError,
+    WithoutToken
 }
