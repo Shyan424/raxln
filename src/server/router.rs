@@ -3,6 +3,7 @@ use std::time::Duration;
 
 use axum::Router;
 use axum::http::header;
+use axum::routing::get;
 use tower::ServiceBuilder;
 use tower_http::{ServiceBuilderExt, LatencyUnit};
 use tower_http::cors::{CorsLayer, Any};
@@ -44,6 +45,11 @@ pub fn router() -> Router {
         .nest("/test", test::test_router());
 
     Router::new()
+        .route("/hello", get(hellow))
         .nest("/api/v1", v1_router)
         .layer(middleware)
+}
+
+async fn hellow() -> String {
+    String::from("hello world")
 }
