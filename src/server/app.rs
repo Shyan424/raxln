@@ -23,11 +23,8 @@ impl App {
 
     #[tokio::main]
     pub async fn start(&self) {
-        axum::Server::bind(&format!("0.0.0.0:{}", self.port).parse().unwrap())
-            .serve(router().into_make_service())
-            .with_graceful_shutdown(graceful_shutdown())
-            .await
-            .unwrap();
+        let listener =   tokio::net::TcpListener::bind(format!("0.0.0.0:{}", self.port)).await.unwrap();
+        axum::serve(listener, router()).await.unwrap();
     }
 }
 
@@ -53,12 +50,12 @@ fn config() -> &'static RwLock<Config> {
     )
 }
 
-async fn graceful_shutdown() {
-    tokio::signal::ctrl_c()
-    .await.unwrap();
+// async fn graceful_shutdown() {
+//     tokio::signal::ctrl_c()
+//         .await.unwrap();
 
-    println!("88");
-}
+//     println!("88");
+// }
 
 #[cfg(test)]
 mod test {

@@ -1,4 +1,5 @@
-use axum::http::{Request, header};
+use axum::extract::Request;
+use axum::http::header;
 use axum::middleware::Next;
 use axum::response::Response;
 
@@ -10,7 +11,7 @@ use crate::jwt::eddsa::EdDsaJwt;
 use super::error::AuthError;
 
 // https://github.com/wpcodevo/rust-axum-jwt-auth/blob/master/src/jwt_auth.rs
-pub async fn jwt_authorization<B>(request: Request<B>, next: Next<B>) -> Result<Response, AuthError> {
+pub async fn jwt_authorization(request: Request, next: Next) -> Result<Response, AuthError> {
     // in ㄉ時候做
     let token = request.headers()
         .get(header::AUTHORIZATION)

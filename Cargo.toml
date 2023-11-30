@@ -11,9 +11,9 @@ members = [".", "model"]
 [dependencies]
 model = { path = "model" }
 
-axum = "0.6.20"
+axum = "0.7"
 tower = { version = "0.4", features = ["full"] }
-tower-http = { version = "0.4", features = ["full"] }
+tower-http = { version = "0.5", features = ["full"] }
 
 tokio = { version = "1", features = ["full"] }
 

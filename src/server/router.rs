@@ -30,7 +30,7 @@ pub fn router() -> Router {
         .layer(CorsLayer::new().allow_origin(Any))
         // Box the response body so it implements `Default` which is required by axum
         // 要加在 TraceLayer 的上面
-        .map_response_body(axum::body::boxed)
+        .map_response_body(axum::body::Body::new)
         .layer(
             TraceLayer::new_for_http()
                 // .on_body_chunk(|chunk: &Bytes, latency: Duration, _: &tracing::Span| {
