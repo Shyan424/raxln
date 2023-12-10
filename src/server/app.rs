@@ -1,8 +1,10 @@
 use std::sync::{OnceLock, RwLock};
 
 use config::Config;
-use tracing::Level;
+use tracing::{Level, info};
 use tracing_subscriber::fmt::time::OffsetTime;
+
+use crate::route::grpc_connect;
 
 use super::router::router;
 
@@ -23,6 +25,9 @@ impl App {
 
     #[tokio::main]
     pub async fn start(&self) {
+        grpc_connect().await;
+
+        info!("server start");
         let listener =   tokio::net::TcpListener::bind(format!("0.0.0.0:{}", self.port)).await.unwrap();
         axum::serve(listener, router()).await.unwrap();
     }

@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package hello;
+
+service HelloToWho {
+  // 一般
+  rpc hello(HelloRequest) returns (HelloResponse) {}
+  // server端stream
+  rpc helloServerStream(HelloRequest) returns (stream HelloResponse) {}
+  // client端stream
+  rpc helloClientStream(stream HelloRequest) returns (HelloResponse) {}
+  // 雙向stream
+  rpc helloAllStream(stream HelloRequest) returns (stream HelloResponse) {}
+}
+
+// 函數參數
+message  HelloRequest {
+  string  name = 1;
+}
+
+// 函數返回值
+message  HelloResponse {
+  string  str = 1;
+}

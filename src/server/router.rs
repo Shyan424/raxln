@@ -11,7 +11,7 @@ use tower_http::timeout::TimeoutLayer;
 use tower_http::trace::{TraceLayer, DefaultOnResponse, DefaultMakeSpan};
 use tracing::Level;
 
-use crate::route::test;
+use crate::route::{test, hello};
 
 use super::on_request::TraceRequest;
 
@@ -42,7 +42,8 @@ pub fn router() -> Router {
         );
 
     let v1_router = Router::new()
-        .nest("/test", test::test_router());
+        .nest("/test", test::test_router())
+        .nest("/grpc", hello::hello_grpc_router());
 
     Router::new()
         .route("/hello", get(hellow))
