@@ -3,7 +3,7 @@ use std::pin::Pin;
 use tokio::sync::mpsc;
 use tokio_stream::{Stream, StreamExt};
 use tokio_stream::wrappers::ReceiverStream;
-use tonic::transport::Server;
+use tonic::transport::{Server, ServerTlsConfig, Identity};
 use tonic::{Response, Status, Request, Streaming};
 
 use crate::hello::{HelloResponse, HelloRequest};
@@ -72,8 +72,12 @@ impl HelloToWho for HelloService {
 }
 
 pub async fn start_hello_grpc(ip: String) -> Result<(), Box<dyn std::error::Error>> {
+    let cert = std::fs::read_to_string("./tls/server.crt")?;
+    let key = std::fs::read_to_string("./tls/server.key")?;
+
     let ser = HelloToWhoServer::new(HelloService);
     Server::builder()
+        .tls_config(ServerTlsConfig::new().identity(Identity::from_pem(cert, key)))?
         .add_service(ser)
         .serve(ip.parse().unwrap()).await?;
 

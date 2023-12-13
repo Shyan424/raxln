@@ -2,7 +2,7 @@
 #[derive(Debug)]
 pub enum Error {
     UriError,
-    ConnectFail,
+    ConnectFail(String),
     RequestDataError(String),
     IDontKnow(String)
 }

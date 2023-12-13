@@ -11,6 +11,8 @@ static CONNECT: OnceLock<HelloClient> = OnceLock::new();
 
 pub async fn hello_grpc_connect() {
     CONNECT.set(
-        HelloClient::connect(String::from("http://[::1]:50061")).await.expect("grpc client error")
+        // https://github.com/hyperium/tonic/issues/279
+        HelloClient::connect(String::from("https://[::1]:50061"))
+            .await.expect("grpc client error")
     ).expect("connect hello grpc client error");
 }

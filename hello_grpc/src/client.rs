@@ -1,6 +1,6 @@
 use tonic::Code::InvalidArgument;
 use tonic::{Request, Status};
-use tonic::transport::Channel;
+use tonic::transport::{Channel, ClientTlsConfig, Certificate};
 
 use crate::error::Error;
 use crate::hello::HelloRequest;
@@ -14,13 +14,21 @@ pub struct HelloClient {
 impl HelloClient {
     pub async fn connect(addr: String) -> Result<Self, Error> {
         let addr = addr.clone();
+        let cert = std::fs::read_to_string("./tls/ca.crt")
+            .map_err(|_| Error::IDontKnow(String::from("Cert error")))?;
         let channel = Channel::from_shared(addr)
             .map_err(|_| Error::UriError)?
+            .tls_config(ClientTlsConfig::new()
+                .ca_certificate(Certificate::from_pem(cert))
+                // SAN Subject Alternative Name
+                .domain_name("localhost")
+            )
+            .map_err(|e| {Error::IDontKnow(format!("tls error {:?}", e))})?
             .connect().await;
 
         match channel {
             Ok(c) => Ok(HelloClient { client: HelloToWhoClient::new(c) }),
-            Err(_) => Err(Error::ConnectFail)
+            Err(e) => {Err(Error::ConnectFail(format!("{:?}", e)))}
         }
     }
 
