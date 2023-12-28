@@ -6,11 +6,12 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [workspace]
-members = [".", "model", "hello_grpc"]
+members = [".", "model", "hello_grpc", "hello_redis"]
 
 [dependencies]
 model = { path = "model" }
 hello_grpc = { path = "hello_grpc" }
+hello_redis = { path = "hello_redis" }
 
 axum = "0.7"
 tower = { version = "0.4", features = ["full"] }
